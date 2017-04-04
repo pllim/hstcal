@@ -3,10 +3,10 @@ language: c
 env:
   global:
     # Set defaults to avoid repeating in most cases
-    - MAIN_CMD="python --version"
+    - MAIN_CMD="pytest tests"
     - SETUP_CMD=""
     - EXE_PREFIX="/tmp/miniconda3"
-    - CONDA_DEPS="gcc"
+    - CONDA_DEPS="gcc pytest requests numpy astropy"
     - PYTHON_VERSION=3.6
 
 matrix:
@@ -28,6 +28,8 @@ matrix:
   - os: linux
     sudo: false
     compiler: gcc
+    env:
+      - SETUP_CMD="--remote-data"
 
   - os: osx
     env:
@@ -45,6 +47,8 @@ matrix:
     env:
       - CFLAGS="-m64"
       - LDFLAGS="-m64 -Wl,-rpath $EXE_PREFIX/envs/test/lib"
+      # Must include -s to avoid timeout. Disabled: takes too long.
+      #- SETUP_CMD="-s --remote-data"
 
   - os: osx
     compiler: clang
