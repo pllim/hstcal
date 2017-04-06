@@ -30,6 +30,8 @@ matrix:
     compiler: gcc
     env:
       - SETUP_CMD="--remote-data"
+      # Use this one to capture screen output
+      #- SETUP_CMD="-s --remote-data"
 
   - os: osx
     env:
