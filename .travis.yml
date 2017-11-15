@@ -3,10 +3,10 @@ language: c
 env:
   global:
     # Set defaults to avoid repeating in most cases
-    - MAIN_CMD="pytest tests"
+    - MAIN_CMD="calacs.e --version"
     - SETUP_CMD=""
     - EXE_PREFIX="/tmp/miniconda3"
-    - CONDA_DEPS="gcc pytest"
+    - CONDA_DEPS="gcc"
     - PYTHON_VERSION=3.6
 
 matrix:
