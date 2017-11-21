@@ -12,6 +12,7 @@ env:
 matrix:
   fast_finish: true
 
+  include:
   - os: osx
     env:
       - PYTHON_VERSION=2.7
