@@ -11,7 +11,7 @@ class TestSingleFrame(BaseACS):
 
     @slow
     def test_pre_sm4(self):
-        """This was ``sbc_single1``."""
+        """This was ``sbc_single1``Just a test."""
         raw_file = 'j9ic01vpq_raw.fits'
 
         # Prepare input file.
