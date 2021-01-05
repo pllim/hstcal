@@ -57,6 +57,7 @@ jobs:
     #    uses a compiled language
 
     - run: |
+       sudo apt-get install libcfitsio-bin
        yes '' | ./waf configure --prefix=./_install ${CFLAGS} ${LDFLAGS} --debug
        ./waf build
        ./waf install
