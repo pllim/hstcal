@@ -1,3 +1,5 @@
+### 16-Mar-2026 - PLL - Version 10.5.0
+    Serial CTE correction is now enabled for post-SM4 WFC subarrays.
 ### 07-May-2024 - MDD - Version 10.4.0
     Implementation of the "Parallel and Serial CTE correction". This
     version of the CTE correction (Generation 3) is based upon the
