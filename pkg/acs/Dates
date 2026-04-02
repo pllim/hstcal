@@ -1,4 +1,7 @@
- 07-May-2024   CALACS 10.4.0 Implementation of the "Parallel and Serial CTE correction". This
+08-Aug-2025   CALACS 10.4.1 Post-SM4 subarrays now have MEANBLEV populated with "fat zero"
+                            value. Also report the value before bias level correction,
+                            as well as after.
+07-May-2024   CALACS 10.4.0 Implementation of the "Parallel and Serial CTE correction". This
                              version of the CTE correction (Generation 3) is based upon the
                              algorithm of Generation 2, but includes the additional correction
                              for the serial direction which is amp-dependent.  Previous
