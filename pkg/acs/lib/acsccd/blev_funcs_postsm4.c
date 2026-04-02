@@ -54,6 +54,7 @@ static int unmake_amp_array(const int arr_rows, const int arr_cols, SingleGroup 
  * *** This routine should be modified according to issues discussed in PR #312 and noted in IT #334. ***
  *
  * 16-May-2018 M.D. De La Pena: Generalized bias_shift_corr() to handle subarray data.
+ * 08-Aug-2025 P.L. Lim: Populate MEANBLEV for post-SM4 subarrays.
  */
 int bias_shift_corr(ACSInfo *acs, int nGroups, ...) {
 
