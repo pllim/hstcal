@@ -36,10 +36,10 @@ static int CloseSpotTab (TblInfo *);
 		DATE:  (char *) date in form of 'dd/mm/yy'
         SHIFTX: (float) shift of spots in X direction (pixels)
         SHIFTY: (float) shift of spots in Y direction (pixels)
-        
+
    The table is read to find the row that comes closest to the observation
    date, and that row is read to obtain the shifts in X and Y.
-   
+
    Input date will be in form of seconds since 1970 as produced by mktime().
 */
 
@@ -72,20 +72,20 @@ ACS2dInfo *acs2d     io: calibration switches, etc
 	    /* Read the current row into tabrow. */
 	    if (ReadSpotTab (&tabinfo, row, &tabrow))
 		return (status);
-        
-        delta = abs(date - tabrow.dtime);
-        
+
+        delta = labs(date - tabrow.dtime);
+
 	    if (delta < delta_date) {
             min_row = row;
             delta_date = delta;
-        }            
+        }
     }
-    
+
     /* Now that we have determined which row has the date closest
         to the observation date, read in that row as the final result.
-    */  		
+    */
     ReadSpotTab (&tabinfo, min_row, &tabrow);
-    
+
     *shiftx = tabrow.shiftx;
     *shifty = tabrow.shifty;
 
@@ -111,7 +111,7 @@ static int OpenSpotTab (char *tname, TblInfo *tabinfo) {
 	}
 
 	tabinfo->nrows = c_tbpsta (tabinfo->tp, TBL_NROWS);
-    
+
 	/* Find the columns. */
 	c_tbcfnd1 (tabinfo->tp, "DATE", &tabinfo->cp_date);
 	c_tbcfnd1 (tabinfo->tp, "SHIFTX", &tabinfo->cp_shiftx);
