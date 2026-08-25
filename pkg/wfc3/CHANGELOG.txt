@@ -1,5 +1,6 @@
 ### 24-Aug-2026 - PLL - Version 3.8.0
     - New crosstalk correction for WFC3/UVIS fullframe unbinned exposures.
+    - CALWF3 reprocessing of IMA input no longer crashes when ASN_TAB is NONE.
 
 ### 07-Jan-2026 - PLL - Version 3.7.3
     - Bug fix to remove per-second in BUNIT for CRREJ output for IR data.
