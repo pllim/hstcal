@@ -6,37 +6,33 @@
 # define    PIX(v,i,j,nx)   v[(i) + (j) * (nx)]
 
 int readSpotImage(char *spotname, SingleGroup *inspot, SingleGroupLine *spotline) {
-    
+
     extern int status;
-    int dimx;
-	
+    const int dimx = inspot->sci.data.nx;
+
     initSingleGroup (inspot);
 	/* Open the input image. */
 	getSingleGroup (spotname, 1, inspot);
 	if (hstio_err())
 	    return (status = OPEN_FAILED);
 
-    dimx = inspot->sci.data.nx;
-        
-    initSingleGroupLine(spotline);    
-    allocSingleGroupLine(spotline, dimx);  
-  
+    initSingleGroupLine(spotline);
+    allocSingleGroupLine(spotline, dimx);
+
     return (status);
 }
 
 
 void copySpotLine(SingleGroup *spot, int line, SingleGroupLine *spotline) {
 
-/* Calling function will need to allocate/deallocate space for 
+/* Calling function will need to allocate/deallocate space for
     SingleGroupLine object.
-*/    
-    int dimx;
+*/
+    const int dimx = spot->sci.data.nx;
     int j;
-    
-    dimx = spot->sci.data.nx;
-        
-    /* Copy data from SingleGroup into SingleGroupLine */ 
-    for (j=0;j<dimx;j++) {   
+
+    /* Copy data from SingleGroup into SingleGroupLine */
+    for (j=0;j<dimx;j++) {
      spotline->sci.line[j] = Pix(spot->sci.data,j,line);
      spotline->err.line[j] = Pix(spot->err.data,j,line);
      spotline->dq.line[j] = Pix(spot->dq.data,j,line);
@@ -54,29 +50,28 @@ float **outspot          o: output product
     extern int status;
 
 	int i, j;
-    int dimx, dimy;
     float xout,yout, xo, yo;
     float value;
 
     float binterp(float, float, int, int, SingleGroup *);
 
 	/* science data dimensions */
-    dimx = inspot->sci.data.nx;
-    dimy = inspot->sci.data.ny;
-    
-    /*For each output line... */    
+    const int dimx = inspot->sci.data.nx;
+    const int dimy = inspot->sci.data.ny;
+
+    /*For each output line... */
 	for (j = 0;  j < dimy;  j++) {
         /* ... apply linear shift to pixel positions... */
         /* This does not allow for scale or rotation changes */
         xout = -dx;
         yout = j - dy;
-        
+
 	    for (i = 0;  i < dimx;  i++) {
             xo = xout + i;
             yo = yout;
             if ( 0 <= xo && xo < dimx && 0 <= yo && yo < dimy){
                 value = binterp(xo,yo, dimx,dimy, inspot);
-                
+
                 Pix(outspot->sci.data,i,j) = value;
                 Pix(outspot->err.data,i,j) = sqrt(value);
             } else {
@@ -94,47 +89,39 @@ float binterp (float x, float y, int nxpix, int nypix, SingleGroup *img) {
     float sx, sy, tx, ty;
     float hold12, hold21, hold22;
     int nx, ny;
-    
+
     nx = (int)x;
     ny = (int)y;
-        
+
     sx = x - nx;
     tx = 1. - sx;
     sy = y - ny;
     ty = 1. - sy;
-    
-    if (nx >= nxpix) {      
+
+    if (nx >= nxpix) {
         hold21 = 2. * Pix(img->sci.data,nx,ny) - Pix(img->sci.data,nx-1,ny);
-    } else {     
+    } else {
         hold21 = Pix(img->sci.data,nx+1,ny);
-    } 
+    }
 
     if (ny >= nypix) {
         hold12 = 2. * Pix(img->sci.data,nx,ny) - Pix(img->sci.data,nx,ny-1);
     } else {
         hold12 = Pix(img->sci.data,nx,ny+1);
-    }    
+    }
 
     if (nx >= nxpix && ny >= nypix) {
         hold22 = 2. * hold21 - (2. * Pix(img->sci.data,nx,ny-1) - Pix(img->sci.data,nx-1,ny-1));
     } else if (nx >= nxpix) {
         hold22 = 2. * hold12 - Pix(img->sci.data,nx-1,ny+1);
-    } else if (ny >= nypix) { 
+    } else if (ny >= nypix) {
        hold22 = 2. * hold21 - Pix(img->sci.data,nx+1,ny-1);
-    } else {     
+    } else {
        hold22 = Pix(img->sci.data,nx+1,ny+1);
-    } 
+    }
 
-    value = tx * ty * Pix(img->sci.data,nx,ny) + sx * ty * hold21 + 
+    value = tx * ty * Pix(img->sci.data,nx,ny) + sx * ty * hold21 +
             sy * tx * hold12 + sx * sy * hold22 ;
 
     return (value);
-}
-
-float ninterp (float x, float y, int nxpix, int nypix, SingleGroup *img) {
-    float value;
-    
-    value = Pix(img->sci.data, (int)(y+0.5),(int)(x+0.5));
-    
-    return(value);
 }
