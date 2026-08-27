@@ -192,7 +192,6 @@ void InitCCDTrl (char *input, char *output) {
 
     char trl_in[CHAR_LINE_LENGTH+1]; 	/* trailer filename for input */
     char trl_out[CHAR_LINE_LENGTH+1]; 	/* output trailer filename */
-    int exist;
 
     char isuffix[] = "_raw";
     char osuffix[] = "_blv_tmp";
@@ -205,7 +204,6 @@ void InitCCDTrl (char *input, char *output) {
     /* Initialize internal variables */
     trl_in[0] = '\0';
     trl_out[0] = '\0';
-    exist = EXISTS_UNKNOWN;
 
     /* Start by stripping off suffix from input/output filenames */
     if (MkName (input, isuffix, trlsuffix, TRL_EXTN, trl_in, CHAR_LINE_LENGTH)) {

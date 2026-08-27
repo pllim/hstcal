@@ -155,7 +155,7 @@ int doNoise(ACSInfo *acs, SingleGroup *x, int *done) {
                 if (strncmp(targname, "BIAS", 4) != 0) {
                     /* include readout noise and convert back to dn */
                     Pix(x->err.data, i, j) =
-                        sqrt(value + rn2[AMP_C] + err_val * err_val);
+                        sqrtf(value + rn2[AMP_C] + err_val * err_val);
                 } else {
                     /* BIAS exposure being processed: only set to RN */
                     Pix(x->err.data, i, j) = rn[AMP_C];
@@ -186,7 +186,7 @@ int doNoise(ACSInfo *acs, SingleGroup *x, int *done) {
                 if (strncmp(targname, "BIAS", 4) != 0) {
                     /* include readout noise and convert back to dn */
                     Pix(x->err.data, i, j) =
-                        sqrt(value + rn2[AMP_D] + err_val * err_val);
+                        sqrtf(value + rn2[AMP_D] + err_val * err_val);
                 } else {
                     /* BIAS exposure being processed: only set to RN */
                     Pix(x->err.data, i, j) = rn[AMP_D];
@@ -219,7 +219,7 @@ int doNoise(ACSInfo *acs, SingleGroup *x, int *done) {
                 if (strncmp(targname, "BIAS", 4) != 0) {
                     /* include readout noise and convert back to dn */
                     Pix(x->err.data, i, j) =
-                        sqrt(value + rn2[AMP_A] + err_val * err_val);
+                        sqrtf(value + rn2[AMP_A] + err_val * err_val);
                 } else {
                     /* BIAS exposure being processed: only set to RN */
                     Pix(x->err.data, i, j) = rn[AMP_A];
@@ -251,7 +251,7 @@ int doNoise(ACSInfo *acs, SingleGroup *x, int *done) {
                 if (strncmp(targname, "BIAS", 4) != 0) {
                     /* include readout noise and convert back to dn */
                     Pix(x->err.data, i, j) =
-                        sqrt(value + rn2[AMP_B] + err_val * err_val);
+                        sqrtf(value + rn2[AMP_B] + err_val * err_val);
                 } else {
                     /* BIAS exposure being processed: only set to RN */
                     Pix(x->err.data, i, j) = rn[AMP_B];
@@ -270,9 +270,13 @@ int doNoise(ACSInfo *acs, SingleGroup *x, int *done) {
                     trlwarn(
                         "Negative value found at (%d,%d) in input MAMA data!",
                         (i + 1), (j + 1));
-                    val = abs(val);
+                    /* NOTE: int casting is to silence compiler warning without
+                       changing results, though the cleaner fix is probably fabs
+                       but that would require INS approval.
+                    */
+                    val = (float) abs((int) val);
                 }
-                value = sqrt(val);
+                value = sqrtf(val);
                 Pix(x->err.data, i, j) = (value > 1) ? value : 1;
             }
         }
