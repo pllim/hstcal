@@ -19,16 +19,6 @@
 # include "calacs.h"
 # include "hstcalerr.h"
 
-/* Custom HSTIO-based routines for creating a SingleGroup without arrays
-   (not used) */
-/*
-static int putEmptyShortHD(char *, char *, int, ShortHdrData *, int);
-static int putEmptyFloatHD(char *, char *, int, FloatHdrData *, int);
-static int putEmptyGroup(char *, int, SingleGroup *, int);
-static int putEmptySci(char *, int, SciHdrData *, int);
-static int putEmptyErr(char *, int, ErrHdrData *, int);
-static int putEmptyDQ(char *, int, DQHdrData *, int);
-*/
 
 /* acsdth -- produce DTH product (empty)
 
@@ -47,17 +37,14 @@ static int putEmptyDQ(char *, int, DQHdrData *, int);
  This initialization is now handled by CalAcsRun in 'calacs.c'.
  Warren J. Hack, 2002 April 18:
  Eliminated creation of dummy '_dth.fits' product.
-
- int AcsDth (char *input, char *output, int dthcorr, int printtime, int verbose) {
  */
 
-int AcsDth (char *in_list, char *output, int dthcorr, int printtime, int verbose) {
+int AcsDth (char *in_list, char *output, int printtime) {
 
 	extern int status;
 
 	/*int option = 0;*/  /* For creating new output image */
 	/*int logit;*/  /* true if we should log file name */
-	char        root[ACS_CBUF+1];    /* ROOTNAME for output file */
   char        mtype[ACS_CBUF+1];  /* role of exposure in Association */
   IRAFPointer tpin;
   char        input[CHAR_FNAME_LENGTH];  /* Name of image in list */
@@ -85,7 +72,6 @@ int AcsDth (char *in_list, char *output, int dthcorr, int printtime, int verbose
    */
 
   /*	InitDthTrl (in_list, output); */
-	root[0] = '\0';
 	sprintf(mtype,"PROD-DTH");
 
 	/* Start the task... */
@@ -219,7 +205,7 @@ void InitDthTrl (char *inlist, char *output) {
 			WhichError (status);
 		}
 
-    if ( (strlen(out_name) + strlen(trl_in) + 1) >= trl_len) {
+    if ( (int) (strlen(out_name) + strlen(trl_in) + 1) >= trl_len) {
       trl_len += CHAR_LINE_LENGTH;
       trl_in = realloc (trl_in, trl_len);
     }

@@ -514,7 +514,7 @@ int GetAsnTable (AsnInfo *asn) {
              return (status = ELEMENT_NOT_FOUND);
          }
          /* Convert to lowercase for use as a file name */
-         for (i = 0; i < strlen(exp[row].memname); i++)
+         for (i = 0; i < (int) strlen(exp[row].memname); i++)
           exp[row].memname[i] = tolower(exp[row].memname[i]);
 
          /* Get the TYPE in this row */
@@ -531,7 +531,7 @@ int GetAsnTable (AsnInfo *asn) {
             user to correct the value.      3-Mar-99 WJH
         */
          lowcase (exp[row].type, exp[row].mtype);
-         for (i = 0; i < strlen(exp[row].type); i++) {
+         for (i = 0; i < (int) strlen(exp[row].type); i++) {
             if (exp[row].type[i] == UNDERLINE_CHAR) {
                 exp[row].type[i] = DASH_CHAR;
                 trlwarn("MEMTYPE %s in row %d was INVALID and needs to be corrected.", exp[row].mtype,

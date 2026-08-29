@@ -301,7 +301,7 @@ static int SumGrps (AcsSumInfo *acs, char *mtype) {
     SingleGroupLine y;            /* line from Nth imset */
     double exptime;                /* exposure time of current image */
     double sumexptime = 0.;        /* accumulated exposure time */
-    char *message;                 /* for printtime info */
+    char message[CHAR_LINE_LENGTH+1]; /* for printtime info */
     int extver;                    /* imset number */
     int i;                    /* counter for current image */
     int chip, ychip;            /*Chip being summed */
@@ -326,11 +326,6 @@ static int SumGrps (AcsSumInfo *acs, char *mtype) {
 
     initSingleGroup (&x);
     initSingleGroupLine (&y);
-
-    if (acs->printtime) {
-        if ((message = calloc (CHAR_LINE_LENGTH+1, sizeof (char))) == NULL)
-            return (status = OUT_OF_MEMORY);
-    }
 
     for (extver = 1;  extver <= acs->nimsets;  extver++) {
 
@@ -408,8 +403,9 @@ static int SumGrps (AcsSumInfo *acs, char *mtype) {
                     strcpy (message, "2nd imset added");
                 else if (i == 3)
                     strcpy (message, "3rd imset added");
-                else
+                else {
                     sprintf (message, "%dth imset added", i);
+                }
 
                 TimeStamp (message, acs->input[i]);
             }
@@ -457,8 +453,6 @@ static int SumGrps (AcsSumInfo *acs, char *mtype) {
             TimeStamp ("Output written to disk", acs->rootname);
     } /* End loop over imsets */
 
-    if (acs->printtime)
-        free (message);
     return (status);
 }
 
@@ -660,7 +654,7 @@ void InitSumTrl (char *input, char *output) {
             WhichError (status);
         }
 
-        if ( (strlen(out_name) + strlen(trl_in) + 1) >= trl_len) {
+        if ( (int) (strlen(out_name) + strlen(trl_in) + 1) >= trl_len) {
             /*
                 Add 1 to out_name to account for comma to be appended.
                 WJH  4 June 2002
