@@ -2030,9 +2030,8 @@ static void detect_iraferr(void) {
 ** constructed filename is returned.
 */
 static char *make_iodesc(IODesc **x, char *fname, char *ename, int ever) {
-        int i, n, flen;
-        char *tmp;
-        IODesc *iodesc;
+        int i, n, fname_len;
+    IODesc *iodesc;
         char xname[9];
 
         iodesc = (IODesc *)calloc(1,sizeof(IODesc));
@@ -2051,7 +2050,8 @@ static char *make_iodesc(IODesc **x, char *fname, char *ename, int ever) {
         iodesc->type = 0;
         if (fname == 0) fname = "";
         if (ename == 0) ename = "";
-        iodesc->filename = (char *)calloc(((flen = strlen(fname)) + 1), sizeof(char));
+        fname_len = strlen(fname) + 1;
+        iodesc->filename = (char *)calloc(fname_len, sizeof(char));
         if (iodesc->filename == NULL) {
             free(iodesc);
             error(NOMEM,"Allocating I/O descriptor");
@@ -2077,17 +2077,27 @@ static char *make_iodesc(IODesc **x, char *fname, char *ename, int ever) {
 
         /* make up the proper filename */
         /* check for a request for the primary HDU */
-        const size_t flen_new = flen + 80;
-        tmp = (char *)calloc(flen_new,sizeof(char));
-        if (tmp == NULL) { error(NOMEM,"Allocating I/O descriptor"); return NULL; }
-        strcpy(tmp,fname);
-        if (ever == 0 || ename == 0 || ename[0] == '\0' || ename[0] == ' ')
-            strcat(tmp,"[0]");
-        else
-            snprintf(&tmp[flen], flen_new, "[%s,%d]",xname,ever);
+        const bool have_xname = strlen(xname) != 0;
+        const bool need_sep = ever == 0 || ename == 0 || ename[0] == '\0' || ename[0] == ' ';
+        char fname_suffix[80] = {0};
+        int fname_suffix_len = snprintf(fname_suffix, sizeof(fname_suffix), "[%s%s%d]",
+            have_xname ? xname : "",
+            need_sep ? "" : ",",
+            ever);
+
+        const size_t result_len = fname_len + fname_suffix_len + 1;
+        char *result = calloc(result_len, sizeof(*result));
+        if (!result) {
+            free(iodesc->filename);
+            free(iodesc);
+            error(NOMEM,"Allocating I/O descriptor");
+            return NULL;
+        }
+        snprintf(result, result_len,"%s%s", fname, fname_suffix);
 
         *x = iodesc;
-        return tmp;
+
+        return result;
 }
 
 IODescPtr openInputImage(char *fname, char *ename, int ever) {
