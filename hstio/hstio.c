@@ -114,6 +114,7 @@
 
 # include "hstio.h"
 # include "hstcalerr.h"
+#include "str_util.h"
 
 /* Global status tracker */
 int status;
@@ -389,7 +390,7 @@ void error(HSTIOError e, char *str) {
                 strcat(error_msg,"\nFITS card has no value indicator.");
                 break;
             case BADFITSQUOTE:
-                        strcat(error_msg,"\nFITS card has no ending quote.");
+                strcat(error_msg,"\nFITS card has no ending quote.");
                 break;
             case BADFITSNUMERIC:
                 strcat(error_msg,"\nFITS card has invalid numeric field.");
@@ -2023,71 +2024,109 @@ static void detect_iraferr(void) {
                 c_iraferrmsg());
 }
 
+static int is_empty_extname(const IODesc *iodesc) {
+    // An empty EXTNAME is:
+    //   - a NULL pointer
+    //   - a zero-length string
+    //   - a string consisting of space characters
+
+    if (!iodesc->extname) {
+        return 1;
+    }
+
+    const size_t len = strlen(iodesc->extname);
+    if (!len) {
+        return 1;
+    }
+
+    for (size_t i = 0; i < len; i++) {
+        if (iodesc->extname[i] != ' ') {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int is_primary_hdu(const IODesc *iodesc) {
+    if (iodesc->extver == 0) {
+        return 1;
+    }
+    if (!is_empty_extname(iodesc) && strcasecmp(iodesc->extname, "PRIMARY") == 0) {
+        return 1;
+    }
+    return 0;
+}
+
 /*
 ** Make_iodesc takes a filename, extname, and extver and creates and
 ** initializes an IODesc structure.  In the process, it builds a
 ** correct filename to be used in the open statement to IRAF.  This
 ** constructed filename is returned.
 */
-static char *make_iodesc(IODesc **x, char *fname, char *ename, int ever) {
-        int i, n, flen;
-        char *tmp;
-        IODesc *iodesc;
-        char xname[9];
+static char *make_iodesc(IODesc **x, const char *fname, const char *ename, const int ever) {
+    IODesc *iodesc = calloc(1, sizeof(IODesc));
+    if (iodesc == NULL) {
+        error(NOMEM, "Allocating I/O descriptor");
+        return NULL;
+    }
 
-        iodesc = (IODesc *)calloc(1,sizeof(IODesc));
-        if (iodesc == NULL) {
-            error(NOMEM,"Allocating I/O descriptor");
-            return NULL;
-        }
-        iodesc->ff = NULL;
-        iodesc->filename = NULL;
-        iodesc->extname = NULL;
-        iodesc->extver = 0;
-        iodesc->hflag = 0;
-        iodesc->hdr = NULL;
-        iodesc->dims[0] = 0;
-        iodesc->dims[1] = 0;
-        iodesc->type = 0;
-        if (fname == 0) fname = "";
-        if (ename == 0) ename = "";
-        iodesc->filename = (char *)calloc(((flen = strlen(fname)) + 1), sizeof(char));
-        if (iodesc->filename == NULL) {
-            free(iodesc);
-            error(NOMEM,"Allocating I/O descriptor");
-            return NULL;
-        }
-        n = strlen(ename);
-        if (n > 8) { ioerr(BADEXTNAME,iodesc,0); return NULL; }
-        for (i = 0; i < n; ++i)
-            xname[i] = toupper(ename[i]);
-        for (--i; i >= 0 && xname[i] == ' '; --i) ;
-        ++i;
-        xname[i] = '\0';
-        iodesc->extname = (char *)calloc((strlen(xname) + 1),sizeof(char));
-        if (iodesc->extname == NULL) {
-            free(iodesc->filename);
-            free(iodesc);
-            error(NOMEM,"Allocating I/O descriptor");
-            return NULL;
-        }
-        strcpy(iodesc->filename,fname);
-        strcpy(iodesc->extname,xname);
-        iodesc->extver = ever;
+    if (fname == NULL) {
+        fname = "";
+    }
+    if (ename == NULL) {
+        ename = "";
+    }
 
-        /* make up the proper filename */
-        /* check for a request for the primary HDU */
-        const size_t flen_new = flen + 80;
-        tmp = (char *)calloc(flen_new,sizeof(char));
-        if (tmp == NULL) { error(NOMEM,"Allocating I/O descriptor"); return NULL; }
-        strcpy(tmp,fname);
-        if (ever == 0 || ename == 0 || ename[0] == '\0' || ename[0] == ' ')
-            strcat(tmp,"[0]");
-        else
-            snprintf(&tmp[flen], flen_new, "[%s,%d]",xname,ever);
+    iodesc->filename = strdup(fname);
+    if (iodesc->filename == NULL) {
+        free(iodesc);
+        error(NOMEM, "Allocating I/O descriptor");
+        return NULL;
+    }
 
-        *x = iodesc;
-        return tmp;
+    iodesc->extname = strdup(ename);
+    if (iodesc->extname == NULL) {
+        free(iodesc->filename);
+        free(iodesc);
+        error(NOMEM, "Allocating I/O descriptor");
+        return NULL;
+    }
+
+    if (strlen(iodesc->extname) > 8) {
+        free(iodesc->filename);
+        free(iodesc);
+        ioerr(BADEXTNAME, iodesc, 0);
+        return NULL;
+    }
+
+    fits_uppercase(iodesc->extname);
+    iodesc->extver = ever;
+
+    /* Check for a request for the primary HDU */
+    const int have_primary = is_primary_hdu(iodesc);
+
+    /* Generate the proper filename for a primary HDU:
+     *   "FILENAME[0]"
+     * Otherwise:
+     *   "FILENAME[EXTNAME,EXTVER]"
+     */
+    char filename_out_suffix[80] = {0};
+    const int filename_suffix_len = snprintf(filename_out_suffix, sizeof(filename_out_suffix), "[%s%s%d]",
+        have_primary ? "" : iodesc->extname,
+        have_primary ? "" : ",", iodesc->extver);
+
+    const size_t filename_out_len = strlen(iodesc->filename) + filename_suffix_len + 1;
+    char *filename_out = calloc(filename_out_len, sizeof(*filename_out));
+    if (!filename_out) {
+        free(iodesc->filename);
+        free(iodesc);
+        error(NOMEM, "Allocating I/O descriptor");
+        return NULL;
+    }
+    snprintf(filename_out, filename_out_len, "%s%s", iodesc->filename, filename_out_suffix);
+
+    *x = iodesc;
+    return filename_out;
 }
 
 IODescPtr openInputImage(char *fname, char *ename, int ever) {
