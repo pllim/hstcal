@@ -44,9 +44,9 @@ int rejpar_in (clpar *par, int newpar[], int nimgs, float exptot, int *niter,
 
     IRAFPointer     tp;
     IRAFPointer     colptr, colptr1;
-    int             i, nrows, nmatch, row;
+    int             i, nrows, nmatch, row=0;
     int             crsplit_in, crsplit, maxcrsplit;
-    float           exp_in, meanexp, mindiff, diff;
+    float           exp_in, meanexp, mindiff=999, diff;
     char            maskstr[ACS_CBUF+1];
 
     void    PrRefInfo (char *, char *, char *, char *, char *);
@@ -98,7 +98,9 @@ int rejpar_in (clpar *par, int newpar[], int nimgs, float exptot, int *niter,
             diff = meanexp - exp_in;
             if (crsplit_in == crsplit && diff >= 0.) {
                 nmatch++;
-                if (nmatch == 1) mindiff = diff;
+                if (nmatch == 1) {
+                    mindiff = diff;
+                }
                 if (diff <= mindiff) {
                     row = i;
                     mindiff = diff;

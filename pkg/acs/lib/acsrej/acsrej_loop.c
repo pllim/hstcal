@@ -1,4 +1,4 @@
-# include   <stdio.h> 
+# include   <stdio.h>
 # include   <string.h>
 # include   <stdlib.h>
 # include   <math.h>
@@ -139,8 +139,8 @@ Code Outline:
   14-Jan-2016   P.L. Lim    Replace threshold formula with ERR. Cleaned up
                             threshold calculation function.
   26-Feb-2019   M.D. DeLaPena Check the IMAGETYP and adjust the dqpat and maskdq
-                            for BIAS and DARK images.  Bad pixels (BPIXTAB flag of 4) 
-                            are ignored during the combination process for the 
+                            for BIAS and DARK images.  Bad pixels (BPIXTAB flag of 4)
+                            are ignored during the combination process for the
                             SCI and ERR arrays (i.e. treat bad pixels as normal pixels).
   18-Jan-2022   M.D. DeLaPena Modified the computation of the output ERR image so
                             the output in the CRJ file is propagated from the input
@@ -239,19 +239,19 @@ int acsrej_loop (IODescPtr ipsci[], IODescPtr iperr[], IODescPtr ipdq[],
     /* Noise and Gain value for a pixel */
     float       rog2[NAMPS];
     float       noise2[NAMPS], gain2[NAMPS];
-    float       gn[2], nse[2];
+    float       nse[2];
     int         detector, chip, ampy, ampx;
     int         numpix;
 
     /* Parameters for applying SHADCORR */
-    IODescPtr   ipshad;
+    IODescPtr   ipshad=NULL;
     float       **shadbuff;
     float       *shadline, *shadcorr;
     int         shad_dimy;
     Hdr         scihdr;
     int         rx, ry, x0, y0;
     float       pixexp;
-    int         shadf_x;        /* Number of x pixels in SHADFILE */
+    int         shadf_x=0;        /* Number of x pixels in SHADFILE */
     float       *zerofbuf;      /* line buffer of all FLOAT zeroes  */
     short       *zerosbuf;      /* line buffer of all SHORT zeroes */
 
@@ -263,7 +263,7 @@ int acsrej_loop (IODescPtr ipsci[], IODescPtr iperr[], IODescPtr ipdq[],
     /********************************** Begin Code ****************************/
     /* Initialization */
     crflag = par->crval;
-    
+
     scale = par->scalense / 100.;
     nocr = ~crflag;
     nospill = ~SPILL;
@@ -271,8 +271,8 @@ int acsrej_loop (IODescPtr ipsci[], IODescPtr iperr[], IODescPtr ipdq[],
     numpix = dim_x * dim_y;
     readnoise_only = par->readnoise_only;
 
-    /* If BIAS or DARK frames, do not use the EXCLUDE value pixels for maskdq  
-       and dqpat per Git Issue #373.  
+    /* If BIAS or DARK frames, do not use the EXCLUDE value pixels for maskdq
+       and dqpat per Git Issue #373.
 
        Set up maskdq for detecting CR-affected pixels
     */
@@ -480,13 +480,9 @@ int acsrej_loop (IODescPtr ipsci[], IODescPtr iperr[], IODescPtr ipdq[],
             /* Set up the gain and noise values used for this line in
                ALL images */
             if (line < ampy ) {
-                gn[0] = gain2[AMP_C];  /* e/DN */
-                gn[1] = gain2[AMP_D];
                 nse[0] = noise2[AMP_C];  /* e^2 */
                 nse[1] = noise2[AMP_D];
             } else {
-                gn[0] = gain2[AMP_A];  /* e/DN */
-                gn[1] = gain2[AMP_B];
                 nse[0] = noise2[AMP_A];  /* e^2 */
                 nse[1] = noise2[AMP_B];
             }
@@ -761,7 +757,7 @@ int acsrej_loop (IODescPtr ipsci[], IODescPtr iperr[], IODescPtr ipdq[],
                             sum[i] += pic[n][width][i] * efacn;  /* e */
                             PIX(efacsum, i, line, dim_x) += efacn;  /* s */
 
-                            /* add the error contributions from each image for a pixel which is not rejected 
+                            /* add the error contributions from each image for a pixel which is not rejected
                              * err2 is in e^2 */
                             err2[i] += SQ(scroll_buferr[n][width][i]);
                         }
@@ -823,7 +819,7 @@ int acsrej_loop (IODescPtr ipsci[], IODescPtr iperr[], IODescPtr ipdq[],
                            }
                         } /* End of loop over second amp used for line */
 
-                        /* If pixels are not marked as rejected, then use the 
+                        /* If pixels are not marked as rejected, then use the
                         exposure and error data for the output error computation */
                         for (i = 0; i < dim_x; i++) {
                             /* output DQF is just the logical OR of all

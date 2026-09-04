@@ -10,7 +10,7 @@
 # include   "hstcalerr.h"
 # include   "rej.h"
 
-static void closeSciDq (int, IODescPtr [], IODescPtr [], IODescPtr [], clpar *);
+static void closeSciDq (int, IODescPtr [], IODescPtr [], IODescPtr []);
 
 
 /*  acsrej_do -- Perform the cosmic ray rejection for ACS images
@@ -308,7 +308,7 @@ int acsrej_do (IRAFPointer tpin, char *outfile, char *mtype, clpar *par,
 			if (acsrej_init (ipsci, ipdq, par, nimgs, dim_x, dim_y, efac,
 							 skyval, &sg, work)) {
 				WhichError(status);
-				closeSciDq(nimgs, ipsci, iperr, ipdq, par);
+				closeSciDq(nimgs, ipsci, iperr, ipdq);
 				return (status);
 			}
 
@@ -321,7 +321,7 @@ int acsrej_do (IRAFPointer tpin, char *outfile, char *mtype, clpar *par,
 							 skyval, &sg.sci.data, &sg.err.data, efacsum,
 							 &sg.dq.data, &nrej, shadref.name, imagetyp)) {
 				WhichError(status);
-				closeSciDq(nimgs, ipsci, iperr, ipdq, par);
+				closeSciDq(nimgs, ipsci, iperr, ipdq);
 				return (status);
 			}
 		} else {
@@ -333,7 +333,7 @@ int acsrej_do (IRAFPointer tpin, char *outfile, char *mtype, clpar *par,
         } /* End if(non_zero) block */
 
         /* must close all images, now that we are done reading them */
-        closeSciDq(nimgs, ipsci, iperr, ipdq, par);
+        closeSciDq(nimgs, ipsci, iperr, ipdq);
 
         /* calculate the total sky (electrons)... */
         skysum = 0.;
@@ -460,11 +460,10 @@ int acsrej_do (IRAFPointer tpin, char *outfile, char *mtype, clpar *par,
 
 /* Helper function to clean up image pointers... */
 static void closeSciDq(int nimgs, IODescPtr ipsci[], IODescPtr iperr[],
-                       IODescPtr ipdq[], clpar *par) {
-    int n;
+                       IODescPtr ipdq[]) {
 
     /* must close all images, now that we are done reading them */
-    for (n = 0; n < nimgs; ++n) {
+    for (int n = 0; n < nimgs; ++n) {
         closeImage (ipsci[n]);
         closeImage (iperr[n]);
         closeImage (ipdq[n]);
