@@ -23,7 +23,7 @@
  Reference image should have been selected to have
  the same binning factor as the science image, so
  assume ratio of bin factors to be 1.
- 
+
  The value of MEANFLSH is calculated based on the weighted average
  of each lines' post-flash value.  The weighting is based on the percent of
  good pixels in each line, so only pixels not flagged BAD (in some way)
@@ -57,7 +57,6 @@ int doFlash (ACSInfo *acs2d, SingleGroup *x, float *meanflash) {
     int rx, ry;            /* for binning post-flash down to size of x */
     int x0, y0;            /* offsets of sci image */
     int same_size;         /* true if no binning of ref image required */
-    int avg = 0;           /* bin2d should sum values within each bin */
     int scilines;          /* number of lines in science image */
     int i, j;
     float mean, flash;
@@ -66,8 +65,8 @@ int doFlash (ACSInfo *acs2d, SingleGroup *x, float *meanflash) {
 
     int FindLine (SingleGroup *, SingleGroupLine *, int *, int *, int *, int *, int *);
     int sub1d (SingleGroup *, int, SingleGroupLine *);
-    int trim1d (SingleGroupLine *, int, int, int, int, int, SingleGroupLine *);
-    int DetCCDChip (char *, int, int, int *);
+    int trim1d (SingleGroupLine *, int, int, int, int, SingleGroupLine *);
+    int DetCCDChip (char *, int, int *);
     void AvgSciValLine (SingleGroupLine *, short, float *, float *);
     int multk1d (SingleGroupLine *a, float k);
     int streq_ic (char *, char *);
@@ -95,19 +94,17 @@ int doFlash (ACSInfo *acs2d, SingleGroup *x, float *meanflash) {
     /* Start with the actual post-flash subtraction now. */
 
     initSingleGroupLine (&y);
-  
+
     scilines = x->sci.data.ny;
-  
+
     /* Compute correct extension version number to extract from
        reference image to correspond to CHIP in science data.
      */
     if (acs2d->pctecorr == PERFORM) {
-        if (DetCCDChip (acs2d->flashcte.name, acs2d->chip, acs2d->nimsets,
-                        &extver))
+        if (DetCCDChip (acs2d->flashcte.name, acs2d->chip, &extver))
             return (status);
     } else {
-        if (DetCCDChip (acs2d->flash.name, acs2d->chip, acs2d->nimsets,
-                        &extver))
+        if (DetCCDChip (acs2d->flash.name, acs2d->chip, &extver))
             return (status);
     }
 
@@ -123,7 +120,7 @@ int doFlash (ACSInfo *acs2d, SingleGroup *x, float *meanflash) {
     }
     if (hstio_err())
         return (status = OPEN_FAILED);
-  
+
     /* Compare binning of science image and reference image;
         get same_size and high_res flags, and get info about
         binning and offset for use by bin2d.
@@ -141,9 +138,9 @@ int doFlash (ACSInfo *acs2d, SingleGroup *x, float *meanflash) {
 
     mean = 0.0;
     weight = 0.0;
- 
+
     /* Bin the post-flash image down to the actual size of x. */
-  
+
     initSingleGroupLine(&z);
     allocSingleGroupLine(&z, x->sci.data.nx);
     for (i=0, j=y0; i < scilines; i++,j++) {
@@ -159,19 +156,19 @@ int doFlash (ACSInfo *acs2d, SingleGroup *x, float *meanflash) {
 
         update = NO;
 
-        if (trim1d(&y, x0, y0, rx, avg, update, &z)) {
+        if (trim1d(&y, x0, y0, rx, update, &z)) {
             trlerror("(flshcorr) size mismatch.");
             return (status);
         }
-    
+
         multk1d(&z, acs2d->flashdur);
-    
+
         AvgSciValLine(&z, acs2d->sdqflags, &flash, &wflash);
 
         /* Sum the contribution from each line */
         mean += flash * wflash;
         weight += wflash;
-    
+
         status = sub1d(x, i, &z);
         if (status)
             return (status);

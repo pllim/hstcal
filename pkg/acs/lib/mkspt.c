@@ -34,7 +34,7 @@ int mkNewSpt (char *in_list, char *mtype, char *output) {
 
     extern int  status;
     IRAFPointer tpin;
-    int         n;
+    size_t      n;
 	Hdr         header;		                /* SPT header */
 	FILE        *fp;		                /* file pointer */
 	IODescPtr   im;		           /* descriptor for input image */
@@ -148,7 +148,10 @@ int mkNewSpt (char *in_list, char *mtype, char *output) {
 	            return (status = 1);
 
             /* Update the OBSERVTN header keyword */
-            strncpy (obsnum, &rootname[6], 3); obsnum[3] = '\0';
+            for (n = 0; n < 3; n++) {
+                obsnum[n] = rootname[6 + n];
+            }
+            obsnum[3] = '\0';
             if (putKeyS (&header, "OBSERVTN", obsnum, ""))
                 return (status = 1);
 
